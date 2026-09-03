@@ -1,14 +1,8 @@
+import mongoose from "mongoose";
 import { Medicine, Customer, Sale } from "../models";
 import { ApiError } from "../utils/apiError";
 import { CreateSaleInput } from "../interfaces";
 
-// Note: this does NOT use a MongoDB transaction. Transactions require
-// MongoDB to run as a replica set (Atlas does this automatically, but a
-// plain local `mongod` does not, and setting one up is extra friction
-// you don't need for this project). For a single-pharmacist system this
-// sequential approach is safe enough in practice — if you later deploy
-// to Atlas and want stronger guarantees against concurrent sales, wrap
-// the two writes below in a mongoose session + withTransaction().
 export async function createSale(input: CreateSaleInput) {
   const medicine = await Medicine.findById(input.medicineId);
   if (!medicine) throw ApiError.notFound("Medicine not found");
@@ -33,6 +27,48 @@ export async function createSale(input: CreateSaleInput) {
 
   medicine.quantity -= input.quantity;
   await medicine.save();
+
+  return sale;
+}
+
+export async function updateSale(id: string, input: Partial<CreateSaleInput>) {
+  const sale = await Sale.findById(id);
+  if (!sale) throw ApiError.notFound("Sale not found");
+
+  const newMedicineId = input.medicineId ?? sale.medicine.toString();
+  const newCustomerId = input.customerId ?? sale.customer.toString();
+  const newQuantity = input.quantity ?? sale.quantity;
+
+  const medicine = await Medicine.findById(newMedicineId);
+  if (!medicine) throw ApiError.notFound("Medicine not found");
+
+  const customer = await Customer.findById(newCustomerId);
+  if (!customer) throw ApiError.notFound("Customer not found");
+
+  const previousMedicine = await Medicine.findById(sale.medicine);
+  if (!previousMedicine) throw ApiError.notFound("Previous medicine not found");
+
+  if (newMedicineId === sale.medicine.toString()) {
+    medicine.quantity += sale.quantity;
+  } else {
+    previousMedicine.quantity += sale.quantity;
+    await previousMedicine.save();
+  }
+
+  if (newQuantity > medicine.quantity) {
+    throw ApiError.badRequest(
+      `Insufficient stock for ${medicine.name}. Available: ${medicine.quantity}`
+    );
+  }
+
+  medicine.quantity -= newQuantity;
+  await medicine.save();
+
+  sale.medicine = new mongoose.Types.ObjectId(newMedicineId);
+  sale.customer = new mongoose.Types.ObjectId(newCustomerId);
+  sale.quantity = newQuantity;
+  sale.total = medicine.price * newQuantity;
+  await sale.save();
 
   return sale;
 }

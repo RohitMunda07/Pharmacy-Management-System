@@ -8,6 +8,11 @@ export const recordSale = asyncHandler(async (req: Request, res: Response) => {
   sendSuccess(res, sale, "Sale recorded successfully", 201);
 });
 
+export const updateSale = asyncHandler(async (req: Request, res: Response) => {
+  const sale = await saleService.updateSale((req.params.id as string), req.body);
+  sendSuccess(res, sale, "Sale updated successfully");
+});
+
 export const getSales = asyncHandler(async (_req: Request, res: Response) => {
   const sales = await saleService.listSales();
   sendSuccess(res, sales);

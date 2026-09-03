@@ -18,6 +18,15 @@ export async function createCustomer(input: CreateCustomerInput) {
   return Customer.create(input);
 }
 
+export async function deleteCustomer(id: string) {
+  const customer = await getCustomerById(id);
+  const sales = await Sale.findOne({ customer: customer._id });
+  if (sales) {
+    throw ApiError.badRequest("Cannot delete a customer with recorded sales history");
+  }
+  await Customer.findByIdAndDelete(id);
+}
+
 export async function getCustomerPurchaseHistory(id: string) {
   await getCustomerById(id);
   return Sale.find({ customer: id })

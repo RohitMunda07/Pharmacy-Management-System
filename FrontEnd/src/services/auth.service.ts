@@ -17,3 +17,8 @@ export async function register(name: string, email: string, password: string) {
   });
   return res.data.data;
 }
+
+export async function logout() {
+  const res = await api.post<{ data: null }>("/auth/logout");
+  return res.data.data;
+}

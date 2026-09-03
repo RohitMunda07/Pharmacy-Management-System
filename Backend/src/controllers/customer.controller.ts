@@ -18,6 +18,11 @@ export const addCustomer = asyncHandler(async (req: Request, res: Response) => {
   sendSuccess(res, customer, "Customer added successfully", 201);
 });
 
+export const removeCustomer = asyncHandler(async (req: Request, res: Response) => {
+  await customerService.deleteCustomer((req.params.id as string));
+  sendSuccess(res, null, "Customer deleted successfully");
+});
+
 export const getPurchaseHistory = asyncHandler(async (req: Request, res: Response) => {
   const history = await customerService.getCustomerPurchaseHistory((req.params.id as string));
   sendSuccess(res, history);

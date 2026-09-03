@@ -11,6 +11,11 @@ export async function createCustomer(payload: Omit<Customer, "id">) {
   return res.data.data;
 }
 
+export async function deleteCustomer(customerId: string) {
+  const res = await api.delete<{ data: null }>(`/customers/${customerId}`);
+  return res.data.data;
+}
+
 export async function fetchPurchaseHistory(customerId: string) {
   const res = await api.get<{ data: Sale[] }>(`/customers/${customerId}/history`);
   return res.data.data;

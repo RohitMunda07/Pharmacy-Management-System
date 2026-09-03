@@ -1,8 +1,12 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchCustomers, fetchPurchaseHistory, createCustomer } from "../services/customer.service";
+import { useAuth } from "../context/AuthContext";
+import { fetchCustomers, fetchPurchaseHistory, createCustomer, deleteCustomer } from "../services/customer.service";
 
 export default function Customers() {
+  const { user } = useAuth();
+  const canManage = user?.role === "ADMIN" || user?.role === "PHARMACIST";
+
   const { data: customers = [], isLoading, error, refetch } = useQuery({
     queryKey: ["customers"],
     queryFn: fetchCustomers,
@@ -10,7 +14,8 @@ export default function Customers() {
 
   const [search, setSearch] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
-  
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -61,6 +66,21 @@ export default function Customers() {
     }
   }
 
+  async function handleDeleteCustomer(customerId: string) {
+    setDeletingId(customerId);
+    try {
+      await deleteCustomer(customerId);
+      if (selectedCustomerId === customerId) {
+        setSelectedCustomerId(null);
+      }
+      await refetch();
+    } catch (err: any) {
+      setSubmitError(err.response?.data?.message || "Unable to delete customer.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   if (isLoading) return <div className="page-container"><div className="empty-state">Loading customers...</div></div>;
   if (error) return <div className="page-container"><div className="empty-state">Failed to load customer data.</div></div>;
 
@@ -92,71 +112,69 @@ export default function Customers() {
               <div className="empty-state">No customer matches the current filter.</div>
             ) : (
               filteredCustomers.map((customer) => (
-                <button
-                  key={customer.id}
-                  type="button"
-                  className="list-item"
-                  onClick={() => setSelectedCustomerId(customer.id)}
-                  style={{ textAlign: "left", width: "100%", background: selectedCustomerId === customer.id ? "#eff6ff" : "#f8fafc" }}
-                >
-                  <div>
-                    <strong>{customer.name}</strong>
-                    <small>{customer.phone}</small>
-                  </div>
-                  <div className="right">
-                    <strong>{customer.address || "No address"}</strong>
-                    <small>{customer.address ? "Profile" : "Add address"}</small>
-                  </div>
-                </button>
+                <div key={customer.id} className="list-item" style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCustomerId(customer.id)}
+                    style={{ textAlign: "left", width: "100%", background: "transparent", border: "none", padding: 0, cursor: "pointer" }}
+                  >
+                    <div>
+                      <strong>{customer.name}</strong>
+                      <small>{customer.phone}</small>
+                    </div>
+                    <div className="right">
+                      <strong>{customer.address || "No address"}</strong>
+                      <small>{customer.address ? "Profile" : "Add address"}</small>
+                    </div>
+                  </button>
+
+                  {canManage && (
+                    <button
+                      type="button"
+                      className="btn danger"
+                      onClick={() => handleDeleteCustomer(customer.id)}
+                      disabled={deletingId === customer.id}
+                      style={{ whiteSpace: "nowrap" }}
+                    >
+                      {deletingId === customer.id ? "Deleting..." : "Delete"}
+                    </button>
+                  )}
+                </div>
               ))
             )}
           </div>
-          
-          <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid #e2e8f0" }}>
-            <h3 style={{ margin: "0 0 1rem 0", fontSize: "1rem" }}>Add new customer</h3>
-            <form onSubmit={handleAddCustomer}>
-              <div className="form-grid">
-                <div className="field full">
-                  <label htmlFor="customer-name">Full name</label>
-                  <input
-                    id="customer-name"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="John Doe"
-                  />
+
+          {canManage && (
+            <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid #e2e8f0" }}>
+              <h3 style={{ margin: "0 0 1rem 0", fontSize: "1rem" }}>Add new customer</h3>
+              <form onSubmit={handleAddCustomer}>
+                <div className="form-grid">
+                  <div className="field full">
+                    <label htmlFor="customer-name">Full name</label>
+                    <input id="customer-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="John Doe" />
+                  </div>
+
+                  <div className="field full">
+                    <label htmlFor="customer-phone">Phone</label>
+                    <input id="customer-phone" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+1 (555) 000-0000" />
+                  </div>
+
+                  <div className="field full">
+                    <label htmlFor="customer-address">Address (optional)</label>
+                    <input id="customer-address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="123 Main Street" />
+                  </div>
                 </div>
 
-                <div className="field full">
-                  <label htmlFor="customer-phone">Phone</label>
-                  <input
-                    id="customer-phone"
-                    type="tel"
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="+1 (555) 000-0000"
-                  />
+                {submitError && <p className="form-error">{submitError}</p>}
+
+                <div className="form-actions">
+                  <button type="submit" className="btn primary" disabled={submitting}>
+                    {submitting ? "Adding..." : "Add customer"}
+                  </button>
                 </div>
-
-                <div className="field full">
-                  <label htmlFor="customer-address">Address (optional)</label>
-                  <input
-                    id="customer-address"
-                    value={form.address}
-                    onChange={(e) => setForm({ ...form, address: e.target.value })}
-                    placeholder="123 Main Street"
-                  />
-                </div>
-              </div>
-
-              {submitError && <p className="form-error">{submitError}</p>}
-
-              <div className="form-actions">
-                <button type="submit" className="btn primary" disabled={submitting}>
-                  {submitting ? "Adding..." : "Add customer"}
-                </button>
-              </div>
-            </form>
-          </div>
+              </form>
+            </div>
+          )}
         </section>
 
         <aside className="content-card">

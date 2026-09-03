@@ -15,3 +15,13 @@ export async function createMedicine(payload: Omit<Medicine, "id">) {
   const res = await api.post<{ data: Medicine }>("/medicines", payload);
   return res.data.data;
 }
+
+export async function updateMedicine(id: string, payload: Partial<Omit<Medicine, "id">>) {
+  const res = await api.put<{ data: Medicine }>(`/medicines/${id}`, payload);
+  return res.data.data;
+}
+
+export async function deleteMedicine(id: string) {
+  const res = await api.delete<{ data: null }>(`/medicines/${id}`);
+  return res.data.data;
+}
