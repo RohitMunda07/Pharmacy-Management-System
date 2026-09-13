@@ -66,41 +66,41 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="content-grid">
+      <div className="content-grid" style={{ gridTemplateColumns: "1fr" }}>
         <section className="content-card">
           <div className="card-title-row">
             <h2 className="card-title">Stock overview</h2>
             <span className="badge">Updated</span>
           </div>
           <StockChart />
-        </section>
 
-        <aside className="content-card">
-          <div className="card-title-row">
-            <h2 className="card-title">Low stock</h2>
-            <span className="badge alert">{lowStockItems.length}</span>
-          </div>
-
-          {loadingMedicines ? (
-            <div className="empty-state">Loading low stock items...</div>
-          ) : lowStockItems.length === 0 ? (
-            <div className="empty-state">All medicines are within reorder thresholds.</div>
-          ) : (
-            <div className="data-list">
-              {lowStockItems.slice(0, 5).map((medicine) => (
-                <div key={medicine.id} className="list-item">
-                  <div>
-                    <strong>{medicine.name}</strong>
-                    <small>{medicine.category}</small>
-                  </div>
-                  <div className="right">
-                    <strong className="low-stock">{medicine.quantity}</strong>
-                    <small>left</small>
-                  </div>
-                </div>
-              ))}
+          <div style={{ marginTop: "1.2rem" }}>
+            <div className="card-title-row" style={{ marginBottom: "0.75rem" }}>
+              <h3 className="card-title">Low stock</h3>
+              <span className="badge alert">{lowStockItems.length}</span>
             </div>
-          )}
+
+            {loadingMedicines ? (
+              <div className="empty-state">Loading low stock items...</div>
+            ) : lowStockItems.length === 0 ? (
+              <div className="empty-state">All medicines are within reorder thresholds.</div>
+            ) : (
+              <div className="data-list">
+                {lowStockItems.slice(0, 5).map((medicine) => (
+                  <div key={medicine.id} className="list-item">
+                    <div>
+                      <strong>{medicine.name}</strong>
+                      <small>{medicine.category}</small>
+                    </div>
+                    <div className="right">
+                      <strong className="low-stock">{medicine.quantity}</strong>
+                      <small>left</small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div style={{ marginTop: "1.2rem" }}>
             <div className="card-title-row" style={{ marginBottom: "0.75rem" }}>
@@ -127,7 +127,7 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-        </aside>
+        </section>
       </div>
     </div>
   );

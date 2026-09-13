@@ -1,4 +1,5 @@
 import { FormEvent, useMemo, useState } from "react";
+import Modal from "../components/common/Modal";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
 import { createMedicine, deleteMedicine, fetchMedicines, updateMedicine } from "../services/medicine.service";
@@ -25,6 +26,7 @@ export default function Inventory() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
   const filteredMedicines = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -114,16 +116,48 @@ export default function Inventory() {
         <span className="pill">{medicines.length} medicines</span>
       </header>
 
-      <div className="split-grid">
+      <div className="split-grid" style={{ gridTemplateColumns: "1fr" }}>
         <section className="content-card">
           <div className="toolbar">
-            <div className="search-box">
-              <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search medicines or category" />
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", width: "100%" }}>
+              <div className="search-box" style={{ flex: 1 }}>
+                <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search medicines or category" />
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                {canManage && (
+                  <button type="button" className="btn primary" onClick={() => { resetForm(); setShowForm((s) => !s); }}>
+                    {showForm || editingMedicineId ? "Close" : "Add medicine"}
+                  </button>
+                )}
+                <button type="button" className="btn secondary" onClick={() => refetch()}>
+                  Refresh
+                </button>
+              </div>
             </div>
-            <button type="button" className="btn secondary" onClick={() => refetch()}>
-              Refresh
-            </button>
           </div>
+
+          {canManage && (showForm || editingMedicineId) && (
+            <Modal title={editingMedicineId ? "Edit medicine" : "Add medicine"} onClose={() => { resetForm(); setShowForm(false); }}>
+              <form onSubmit={handleSubmit}>
+                <div className="form-grid">
+                  <div className="field full"><label htmlFor="medicine-name">Medicine name</label><input id="medicine-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Medicine Name" /></div>
+                  <div className="field full"><label htmlFor="category">Category</label><input id="category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Category"/></div>
+                  <div className="field"><label htmlFor="quantity">Quantity</label><input id="quantity" type="number" min={0} value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} placeholder="Quantity"/></div>
+                  <div className="field"><label htmlFor="reorder-level">Reorder level</label><input id="reorder-level" type="number" min={0} value={form.reorderLevel} onChange={(e) => setForm({ ...form, reorderLevel: e.target.value })} placeholder="Reorder Level"/></div>
+                  <div className="field"><label htmlFor="price">Price</label><input id="price" type="number" min={0} step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="Price"/></div>
+                  <div className="field"><label htmlFor="expiry-date">Expiry date</label><input id="expiry-date" type="date" value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.target.value })} /></div>
+                </div>
+
+                {submitError && <p className="form-error" style={{ marginTop: "1rem" }}>{submitError}</p>}
+
+                <div className="form-actions">
+                  <button type="submit" className="btn primary" disabled={submitting}>
+                    {submitting ? (editingMedicineId ? "Updating..." : "Saving...") : (editingMedicineId ? "Update medicine" : "Add medicine")}
+                  </button>
+                </div>
+              </form>
+            </Modal>
+          )}
 
           <div className="table-wrap">
             <table className="data-table">
@@ -144,17 +178,17 @@ export default function Inventory() {
                 ) : (
                   filteredMedicines.map((medicine) => (
                     <tr key={medicine.id}>
-                      <td><strong>{medicine.name}</strong></td>
-                      <td>{medicine.category}</td>
-                      <td className={medicine.quantity <= medicine.reorderLevel ? "low-stock" : ""}>{medicine.quantity}</td>
-                      <td>{medicine.reorderLevel}</td>
-                      <td>₹{medicine.price.toFixed(2)}</td>
-                      <td>{new Date(medicine.expiryDate).toLocaleDateString()}</td>
+                      <td data-label="Name"><strong>{medicine.name}</strong></td>
+                      <td data-label="Category">{medicine.category}</td>
+                      <td data-label="Qty" className={medicine.quantity <= medicine.reorderLevel ? "low-stock" : ""}>{medicine.quantity}</td>
+                      <td data-label="Reorder">{medicine.reorderLevel}</td>
+                      <td data-label="Price">₹{medicine.price.toFixed(2)}</td>
+                      <td data-label="Expiry">{new Date(medicine.expiryDate).toLocaleDateString()}</td>
                       <td>
                         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                           {canManage && (
                             <>
-                              <button type="button" className="btn secondary" onClick={() => fillFormForEdit(medicine)}>
+                              <button type="button" className="btn secondary" onClick={() => { fillFormForEdit(medicine); setShowForm(true); }}>
                                 Edit
                               </button>
                               <button type="button" className="btn danger" onClick={() => handleDeleteMedicine(medicine.id)} disabled={deletingId === medicine.id}>
@@ -171,38 +205,6 @@ export default function Inventory() {
             </table>
           </div>
         </section>
-
-        {canManage && (
-          <aside className="form-panel">
-            <div className="card-title-row">
-              <h2 className="card-title">{editingMedicineId ? "Edit medicine" : "Add medicine"}</h2>
-              {editingMedicineId && (
-                <button type="button" className="btn secondary" onClick={resetForm}>
-                  Cancel
-                </button>
-              )}
-            </div>
-
-            <form onSubmit={handleSubmit}>
-              <div className="form-grid">
-                <div className="field full"><label htmlFor="medicine-name">Medicine name</label><input id="medicine-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-                <div className="field full"><label htmlFor="category">Category</label><input id="category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
-                <div className="field"><label htmlFor="quantity">Quantity</label><input id="quantity" type="number" min={0} value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} /></div>
-                <div className="field"><label htmlFor="reorder-level">Reorder level</label><input id="reorder-level" type="number" min={0} value={form.reorderLevel} onChange={(e) => setForm({ ...form, reorderLevel: e.target.value })} /></div>
-                <div className="field"><label htmlFor="price">Price</label><input id="price" type="number" min={0} step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
-                <div className="field"><label htmlFor="expiry-date">Expiry date</label><input id="expiry-date" type="date" value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.target.value })} /></div>
-              </div>
-
-              {submitError && <p className="form-error" style={{ marginTop: "1rem" }}>{submitError}</p>}
-
-              <div className="form-actions">
-                <button type="submit" className="btn primary" disabled={submitting}>
-                  {submitting ? (editingMedicineId ? "Updating..." : "Saving...") : (editingMedicineId ? "Update medicine" : "Add medicine")}
-                </button>
-              </div>
-            </form>
-          </aside>
-        )}
       </div>
     </div>
   );

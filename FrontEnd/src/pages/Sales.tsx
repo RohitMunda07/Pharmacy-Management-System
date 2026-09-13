@@ -1,4 +1,5 @@
 import { FormEvent, useMemo, useState } from "react";
+import Modal from "../components/common/Modal";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
 import { fetchCustomers } from "../services/customer.service";
@@ -30,6 +31,7 @@ export default function Sales() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
   const selectedMedicine = useMemo(() => {
     if (!medicineId || !medicineId.trim() || medicines.length === 0) return null;
@@ -116,119 +118,126 @@ export default function Sales() {
         <span className="pill">{sales.length} recent sales</span>
       </header>
 
-      <div className="split-grid">
-        {canManage && (
-          <section className="form-panel">
-            <div className="card-title-row">
-              <h2 className="card-title">{editingSaleId ? "Edit sale" : "Create sale"}</h2>
-              {editingSaleId && (
-                <button type="button" className="btn secondary" onClick={resetForm}>
-                  Cancel
+      <div className="split-grid" style={{ gridTemplateColumns: "1fr" }}>
+        <section className="content-card">
+          <div className="toolbar" style={{ justifyContent: "space-between" }}>
+            <div />
+            <div style={{ display: "flex", gap: "0.6rem" }}>
+              {canManage && (
+                <button type="button" className="btn primary" onClick={() => { setShowForm((s) => !s); if (!showForm) resetForm(); }}>
+                  {showForm || editingSaleId ? "Close" : "Create sale"}
                 </button>
               )}
+              <button type="button" className="btn secondary" onClick={() => refetchSales()}>
+                Refresh
+              </button>
             </div>
-
-            <form onSubmit={handleSubmit}>
-              <div className="form-grid">
-                <div className="field full">
-                  <label htmlFor="medicine">Medicine {isLoadingMedicines && "(Loading...)"}</label>
-                  <select id="medicine" value={medicineId} onChange={(e) => setMedicineId(e.target.value)} disabled={isLoadingMedicines}>
-                    <option value="">{isLoadingMedicines ? "Loading medicines..." : "Select medicine"}</option>
-                    {medicines.map((medicine) => (
-                      <option key={medicine.id} value={medicine.id}>
-                        {medicine.name} · ₹{medicine.price.toFixed(2)}
-                      </option>
-                    ))}
-                  </select>
-                  {medicines.length === 0 && !isLoadingMedicines && (
-                    <small style={{ color: "#e11d48" }}>No medicines available. Add medicines first.</small>
-                  )}
-                </div>
-
-                <div className="field full">
-                  <label htmlFor="customer">Customer {isLoadingCustomers && "(Loading...)"}</label>
-                  <select id="customer" value={customerId} onChange={(e) => setCustomerId(e.target.value)} disabled={isLoadingCustomers}>
-                    <option value="">{isLoadingCustomers ? "Loading customers..." : "Select customer"}</option>
-                    {customers.map((customer) => (
-                      <option key={customer.id} value={customer.id}>
-                        {customer.name} · {customer.phone}
-                      </option>
-                    ))}
-                  </select>
-                  {customers.length === 0 && !isLoadingCustomers && (
-                    <small style={{ color: "#e11d48" }}>No customers available. Add customers first.</small>
-                  )}
-                </div>
-
-                <div className="field full">
-                  <label htmlFor="quantity">Quantity</label>
-                  <input
-                    id="quantity"
-                    type="number"
-                    min={1}
-                    max={selectedMedicine?.quantity ?? 999}
-                    value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value) || 1)}
-                  />
-                  {selectedMedicine && (
-                    <small style={{ color: "#666" }}>
-                      Max available: {selectedMedicine.quantity}
-                    </small>
-                  )}
-                </div>
-              </div>
-
-                {selectedMedicine && (
-                <div className="demo-box" style={{ marginTop: "1rem" }}>
-                  <strong>{selectedMedicine.name}</strong>
-                  <div className="muted">Unit price: ₹{selectedMedicine.price.toFixed(2)} · Estimated total: ₹{total.toFixed(2)}</div>
-                </div>
-              )}
-
-              {error && <p className="form-error">{error}</p>}
-
-              <div className="form-actions">
-                <button type="submit" className="btn primary" disabled={isSubmitting}>
-                  {isSubmitting ? (editingSaleId ? "Updating..." : "Processing...") : (editingSaleId ? "Update sale" : "Record sale")}
-                </button>
-              </div>
-            </form>
-          </section>
-        )}
-
-        <aside className="list-panel content-card">
-          <div className="card-title-row">
-            <h2 className="card-title">Recent sales</h2>
-            <span className="badge">Live</span>
           </div>
 
-          {isLoadingSales ? (
-            <div className="empty-state">Loading sales...</div>
-          ) : sales.length === 0 ? (
-            <div className="empty-state">No sales recorded yet.</div>
-          ) : (
-            <div className="data-list">
-              {sales.map((sale) => (
-                <div key={sale.id} className="list-item" style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                  <div style={{ flex: 1 }}>
-                    <strong>{sale.medicine?.name ?? "(unknown medicine)"}</strong>
-                    <small>{sale.customer?.name ?? "(unknown customer)"}</small>
-                  </div>
-                  <div className="right">
-                    <strong>₹{sale.total.toFixed(2)}</strong>
-                    <small>{sale.quantity} qty</small>
+          {canManage && (showForm || editingSaleId) && (
+            <Modal title={editingSaleId ? "Edit sale" : "Create sale"} onClose={() => { resetForm(); setShowForm(false); }}>
+              <form onSubmit={handleSubmit}>
+                <div className="form-grid">
+                  <div className="field full">
+                    <label htmlFor="medicine">Medicine {isLoadingMedicines && "(Loading...)"}</label>
+                    <select id="medicine" value={medicineId} onChange={(e) => setMedicineId(e.target.value)} disabled={isLoadingMedicines}>
+                      <option value="">{isLoadingMedicines ? "Loading medicines..." : "Select medicine"}</option>
+                      {medicines.map((medicine) => (
+                        <option key={medicine.id} value={medicine.id}>
+                          {medicine.name} · ₹{medicine.price.toFixed(2)}
+                        </option>
+                      ))}
+                    </select>
+                    {medicines.length === 0 && !isLoadingMedicines && (
+                      <small style={{ color: "#e11d48" }}>No medicines available. Add medicines first.</small>
+                    )}
                   </div>
 
-                  {canManage && (
-                    <button type="button" className="btn secondary" onClick={() => handleEditSale(sale)}>
-                      Edit
-                    </button>
-                  )}
+                  <div className="field full">
+                    <label htmlFor="customer">Customer {isLoadingCustomers && "(Loading...)"}</label>
+                    <select id="customer" value={customerId} onChange={(e) => setCustomerId(e.target.value)} disabled={isLoadingCustomers}>
+                      <option value="">{isLoadingCustomers ? "Loading customers..." : "Select customer"}</option>
+                      {customers.map((customer) => (
+                        <option key={customer.id} value={customer.id}>
+                          {customer.name} · {customer.phone}
+                        </option>
+                      ))}
+                    </select>
+                    {customers.length === 0 && !isLoadingCustomers && (
+                      <small style={{ color: "#e11d48" }}>No customers available. Add customers first.</small>
+                    )}
+                  </div>
+
+                  <div className="field full">
+                    <label htmlFor="quantity">Quantity</label>
+                    <input
+                      id="quantity"
+                      type="number"
+                      min={1}
+                      max={selectedMedicine?.quantity ?? 999}
+                      value={quantity}
+                      onChange={(e) => setQuantity(Number(e.target.value) || 1)}
+                    />
+                    {selectedMedicine && (
+                      <small style={{ color: "#666" }}>
+                        Max available: {selectedMedicine.quantity}
+                      </small>
+                    )}
+                  </div>
                 </div>
-              ))}
-            </div>
+
+                {selectedMedicine && (
+                  <div className="demo-box" style={{ marginTop: "1rem" }}>
+                    <strong>{selectedMedicine.name}</strong>
+                    <div className="muted">Unit price: ₹{selectedMedicine.price.toFixed(2)} · Estimated total: ₹{total.toFixed(2)}</div>
+                  </div>
+                )}
+
+                {error && <p className="form-error">{error}</p>}
+
+                <div className="form-actions">
+                  <button type="submit" className="btn primary" disabled={isSubmitting}>
+                    {isSubmitting ? (editingSaleId ? "Updating..." : "Processing...") : (editingSaleId ? "Update sale" : "Record sale")}
+                  </button>
+                </div>
+              </form>
+            </Modal>
           )}
-        </aside>
+
+          <div className="list-panel content-card">
+            <div className="card-title-row">
+              <h2 className="card-title">Recent sales</h2>
+              <span className="badge">Live</span>
+            </div>
+
+            {isLoadingSales ? (
+              <div className="empty-state">Loading sales...</div>
+            ) : sales.length === 0 ? (
+              <div className="empty-state">No sales recorded yet.</div>
+            ) : (
+              <div className="data-list">
+                {sales.map((sale) => (
+                  <div key={sale.id} className="list-item" style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                    <div style={{ flex: 1 }}>
+                      <strong>{sale.medicine?.name ?? "(unknown medicine)"}</strong>
+                      <small>{sale.customer?.name ?? "(unknown customer)"}</small>
+                    </div>
+                    <div className="right">
+                      <strong>₹{sale.total.toFixed(2)}</strong>
+                      <small>{sale.quantity} qty</small>
+                    </div>
+
+                    {canManage && (
+                      <button type="button" className="btn secondary" onClick={() => { handleEditSale(sale); setShowForm(true); }}>
+                        Edit
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );

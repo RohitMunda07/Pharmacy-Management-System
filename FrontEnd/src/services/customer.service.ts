@@ -23,6 +23,13 @@ export async function deleteCustomer(customerId: string) {
   return res.data.data;
 }
 
+export async function updateCustomer(customerId: string, payload: Partial<Omit<Customer, "id">>) {
+  const id = String(customerId || "").trim();
+  if (!id) throw new Error("Invalid customer id");
+  const res = await api.put<{ data: any }>(`/customers/${encodeURIComponent(id)}`, payload);
+  return normalizeCustomer(res.data.data);
+}
+
 export async function fetchPurchaseHistory(customerId: string) {
   const id = String(customerId || "").trim();
   if (!id) return [];

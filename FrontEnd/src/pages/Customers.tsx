@@ -1,7 +1,8 @@
 import { FormEvent, useMemo, useState } from "react";
+import Modal from "../components/common/Modal";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
-import { fetchCustomers, fetchPurchaseHistory, createCustomer, deleteCustomer } from "../services/customer.service";
+import { fetchCustomers, fetchPurchaseHistory, createCustomer, deleteCustomer, updateCustomer } from "../services/customer.service";
 
 export default function Customers() {
   const { user } = useAuth();
@@ -21,8 +22,10 @@ export default function Customers() {
     phone: "",
     address: "",
   });
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
 
   const filteredCustomers = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -40,7 +43,7 @@ export default function Customers() {
 
   const selectedCustomer = customers.find((customer) => customer.id === selectedCustomerId) ?? null;
 
-  async function handleAddCustomer(event: FormEvent) {
+  async function handleSubmitCustomer(event: FormEvent) {
     event.preventDefault();
     setSubmitError("");
 
@@ -51,16 +54,27 @@ export default function Customers() {
 
     setSubmitting(true);
     try {
-      await createCustomer({
-        name: form.name,
-        phone: form.phone,
-        address: form.address || undefined,
-      });
+      if (editingId) {
+        await updateCustomer(editingId, {
+          name: form.name,
+          phone: form.phone,
+          address: form.address || undefined,
+        });
+        setEditingId(null);
+      } else {
+        await createCustomer({
+          name: form.name,
+          phone: form.phone,
+          address: form.address || undefined,
+        });
+      }
+
       setForm({ name: "", phone: "", address: "" });
+      setShowAdd(false);
       setSubmitError("");
       await refetch();
     } catch (err: any) {
-      setSubmitError(err.response?.data?.message || "Unable to add customer.");
+      setSubmitError(err.response?.data?.message || (editingId ? "Unable to update customer." : "Unable to add customer."));
     } finally {
       setSubmitting(false);
     }
@@ -101,9 +115,9 @@ export default function Customers() {
         <span className="pill">{customers.length} profiles</span>
       </header>
 
-      <div className="split-grid">
+      <div className="split-grid" style={{ gridTemplateColumns: "1fr" }}>
         <section className="content-card">
-          <div className="toolbar">
+          <div className="toolbar" style={{ justifyContent: "space-between" }}>
             <div className="search-box">
               <input
                 type="search"
@@ -112,49 +126,21 @@ export default function Customers() {
                 placeholder="Search by name, phone, or address"
               />
             </div>
+            <div style={{ display: "flex", gap: "0.6rem" }}>
+              {canManage && (
+                <button type="button" className="btn primary" onClick={() => { setShowAdd((s) => !s); setForm({ name: "", phone: "", address: "" }); }}>
+                  {showAdd ? "Close" : "Add customer"}
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="data-list">
-            {filteredCustomers.length === 0 ? (
-              <div className="empty-state">No customer matches the current filter.</div>
-            ) : (
-              filteredCustomers.map((customer) => (
-                <div key={customer.id} className="list-item" style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCustomerId(customer.id)}
-                    style={{ textAlign: "left", width: "100%", background: "transparent", border: "none", padding: 0, cursor: "pointer" }}
-                  >
-                    <div>
-                      <strong>{customer.name}</strong>
-                      <small>{customer.phone}</small>
-                    </div>
-                    <div className="right">
-                      <strong>{customer.address || "No address"}</strong>
-                      <small>{customer.address ? "Profile" : "Add address"}</small>
-                    </div>
-                  </button>
-
-                  {canManage && (
-                    <button
-                      type="button"
-                      className="btn danger"
-                      onClick={() => handleDeleteCustomer(customer.id)}
-                      disabled={deletingId === customer.id}
-                      style={{ whiteSpace: "nowrap" }}
-                    >
-                      {deletingId === customer.id ? "Deleting..." : "Delete"}
-                    </button>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-
-          {canManage && (
-            <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid #e2e8f0" }}>
-              <h3 style={{ margin: "0 0 1rem 0", fontSize: "1rem" }}>Add new customer</h3>
-              <form onSubmit={handleAddCustomer}>
+          {canManage && showAdd && (
+            <Modal
+              title={editingId ? "Edit customer" : "Add new customer"}
+              onClose={() => { setShowAdd(false); setEditingId(null); setForm({ name: "", phone: "", address: "" }); setSubmitError(""); }}
+            >
+              <form onSubmit={handleSubmitCustomer}>
                 <div className="form-grid">
 
                   <div className="field full">
@@ -177,15 +163,70 @@ export default function Customers() {
 
                 <div className="form-actions">
                   <button type="submit" className="btn primary" disabled={submitting}>
-                    {submitting ? "Adding..." : "Add customer"}
+                    {submitting ? (editingId ? "Updating..." : "Adding...") : (editingId ? "Update customer" : "Add customer")}
                   </button>
                 </div>
               </form>
-            </div>
+            </Modal>
           )}
+
+          <div className="data-list">
+            {filteredCustomers.length === 0 ? (
+              <div className="empty-state">No customer matches the current filter.</div>
+            ) : (
+              filteredCustomers.map((customer) => (
+                <div key={customer.id} className="list-item" style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCustomerId(customer.id)}
+                    style={{ textAlign: "left", width: "100%", background: "transparent", border: "none", padding: 0, cursor: "pointer" }}
+                  >
+                    <div>
+                      <strong>{customer.name}</strong>
+                      <small>{customer.phone}</small>
+                    </div>
+                    <div className="right">
+                      <strong>{customer.address || "No address"}</strong>
+                      <small>{customer.address ? "Profile" : "Add address"}</small>
+                    </div>
+                  </button>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                          {canManage && (
+                            <>
+                              <button
+                                type="button"
+                                className="btn secondary"
+                                onClick={() => {
+                                  // open modal in edit mode
+                                  setEditingId(customer.id);
+                                  setForm({ name: customer.name || "", phone: customer.phone || "", address: customer.address || "" });
+                                  setShowAdd(true);
+                                }}
+                                style={{ whiteSpace: "nowrap" }}
+                              >
+                                Edit
+                              </button>
+
+                              <button
+                                type="button"
+                                className="btn danger"
+                                onClick={() => handleDeleteCustomer(customer.id)}
+                                disabled={deletingId === customer.id}
+                                style={{ whiteSpace: "nowrap" }}
+                              >
+                                {deletingId === customer.id ? "Deleting..." : "Delete"}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                </div>
+              ))
+            )}
+          </div>
         </section>
 
-        <aside className="content-card">
+        <section className="content-card">
           <div className="card-title-row">
             <h2 className="card-title">Purchase history</h2>
             {selectedCustomer && <span className="badge">{selectedCustomer.name}</span>}
@@ -213,7 +254,7 @@ export default function Customers() {
               ))}
             </div>
           )}
-        </aside>
+        </section>
       </div>
     </div>
   );
