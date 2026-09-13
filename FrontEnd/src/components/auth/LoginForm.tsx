@@ -29,7 +29,7 @@ export default function LoginForm() {
       <div className="login-brand">
         <div className="brand-mark">P</div>
         <div>
-          <h2>PharmaFlow</h2>
+          <h2>Login</h2>
         </div>
       </div>
 
@@ -71,9 +71,9 @@ export default function LoginForm() {
         Don't have an account? <a href="/register">Register</a>
       </div>
 
-      <div className="demo-box">
+      {/* <div className="demo-box">
         Demo login: <strong>admin@pharmacy.com</strong> / <strong>Admin@123</strong>
-      </div>
+      </div> */}
     </form>
   );
 }
