@@ -5,6 +5,7 @@ import * as authService from "../services/auth.service";
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
+  isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -40,7 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const value: AuthContextValue = { user, loading, login, logout };
+  const isAuthenticated = !!user;
+
+  const value: AuthContextValue = { user, loading, isAuthenticated, login, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

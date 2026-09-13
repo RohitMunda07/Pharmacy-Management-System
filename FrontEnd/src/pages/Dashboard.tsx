@@ -119,7 +119,7 @@ export default function Dashboard() {
                       <small>{new Date(sale.soldAt).toLocaleDateString()}</small>
                     </div>
                     <div className="right">
-                      <strong>${sale.total.toFixed(2)}</strong>
+                      <strong>₹{sale.total.toFixed(2)}</strong>
                       <small>{sale.quantity} qty</small>
                     </div>
                   </div>

@@ -69,6 +69,13 @@ export default function Customers() {
   async function handleDeleteCustomer(customerId: string) {
     setDeletingId(customerId);
     try {
+      // check for purchase history first to avoid backend 400
+      const history = await fetchPurchaseHistory(customerId);
+      if ((history || []).length > 0) {
+        setSubmitError("Cannot delete a customer with recorded sales history.");
+        return;
+      }
+
       await deleteCustomer(customerId);
       if (selectedCustomerId === customerId) {
         setSelectedCustomerId(null);
@@ -149,19 +156,20 @@ export default function Customers() {
               <h3 style={{ margin: "0 0 1rem 0", fontSize: "1rem" }}>Add new customer</h3>
               <form onSubmit={handleAddCustomer}>
                 <div className="form-grid">
+
                   <div className="field full">
                     <label htmlFor="customer-name">Full name</label>
-                    <input id="customer-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="John Doe" />
+                    <input id="customer-name" className="rounded-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Rahul Kumar" />
                   </div>
 
                   <div className="field full">
                     <label htmlFor="customer-phone">Phone</label>
-                    <input id="customer-phone" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+1 (555) 000-0000" />
+                    <input id="customer-phone" className="rounded-input" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 98765 43210" />
                   </div>
 
                   <div className="field full">
                     <label htmlFor="customer-address">Address (optional)</label>
-                    <input id="customer-address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="123 Main Street" />
+                    <input id="customer-address" className="rounded-input" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="123 Main Street" />
                   </div>
                 </div>
 
@@ -191,15 +199,15 @@ export default function Customers() {
             <div className="empty-state">No purchases recorded for this customer yet.</div>
           ) : (
             <div className="data-list">
-              {purchaseHistory.map((sale) => (
+                {purchaseHistory.map((sale) => (
                 <div key={sale.id} className="list-item">
                   <div>
-                    <strong>{sale.medicine.name}</strong>
+                    <strong>{sale.medicine?.name ?? "(unknown medicine)"}</strong>
                     <small>{new Date(sale.soldAt).toLocaleDateString()}</small>
                   </div>
                   <div className="right">
-                    <strong>${sale.total.toFixed(2)}</strong>
-                    <small>{sale.quantity} units</small>
+                    <strong>₹{(sale.total ?? 0).toFixed(2)}</strong>
+                    <small>{sale.quantity ?? 0} units</small>
                   </div>
                 </div>
               ))}

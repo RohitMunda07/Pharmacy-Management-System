@@ -136,7 +136,7 @@ export default function Sales() {
                     <option value="">{isLoadingMedicines ? "Loading medicines..." : "Select medicine"}</option>
                     {medicines.map((medicine) => (
                       <option key={medicine.id} value={medicine.id}>
-                        {medicine.name} · ${medicine.price.toFixed(2)}
+                        {medicine.name} · ₹{medicine.price.toFixed(2)}
                       </option>
                     ))}
                   </select>
@@ -178,10 +178,10 @@ export default function Sales() {
                 </div>
               </div>
 
-              {selectedMedicine && (
+                {selectedMedicine && (
                 <div className="demo-box" style={{ marginTop: "1rem" }}>
                   <strong>{selectedMedicine.name}</strong>
-                  <div className="muted">Unit price: ${selectedMedicine.price.toFixed(2)} · Estimated total: ${total.toFixed(2)}</div>
+                  <div className="muted">Unit price: ₹{selectedMedicine.price.toFixed(2)} · Estimated total: ₹{total.toFixed(2)}</div>
                 </div>
               )}
 
@@ -211,11 +211,11 @@ export default function Sales() {
               {sales.map((sale) => (
                 <div key={sale.id} className="list-item" style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
                   <div style={{ flex: 1 }}>
-                    <strong>{sale.medicine.name}</strong>
-                    <small>{sale.customer.name}</small>
+                    <strong>{sale.medicine?.name ?? "(unknown medicine)"}</strong>
+                    <small>{sale.customer?.name ?? "(unknown customer)"}</small>
                   </div>
                   <div className="right">
-                    <strong>${sale.total.toFixed(2)}</strong>
+                    <strong>₹{sale.total.toFixed(2)}</strong>
                     <small>{sale.quantity} qty</small>
                   </div>
 

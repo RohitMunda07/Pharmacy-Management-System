@@ -16,9 +16,9 @@ export default function Inventory() {
   const [form, setForm] = useState({
     name: "",
     category: "",
-    quantity: 0,
-    reorderLevel: 0,
-    price: 0,
+    quantity: "",
+    reorderLevel: "",
+    price: "",
     expiryDate: "",
   });
   const [editingMedicineId, setEditingMedicineId] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export default function Inventory() {
   }, [medicines, search]);
 
   function resetForm() {
-    setForm({ name: "", category: "", quantity: 0, reorderLevel: 0, price: 0, expiryDate: "" });
+    setForm({ name: "", category: "", quantity: "", reorderLevel: "", price: "", expiryDate: "" });
     setEditingMedicineId(null);
   }
 
@@ -44,9 +44,9 @@ export default function Inventory() {
     setForm({
       name: medicine.name,
       category: medicine.category,
-      quantity: medicine.quantity,
-      reorderLevel: medicine.reorderLevel,
-      price: medicine.price,
+      quantity: String(medicine.quantity),
+      reorderLevel: String(medicine.reorderLevel),
+      price: String(medicine.price),
       expiryDate: new Date(medicine.expiryDate).toISOString().slice(0, 10),
     });
   }
@@ -64,9 +64,9 @@ export default function Inventory() {
     try {
       const payload = {
         ...form,
-        quantity: Number(form.quantity),
-        reorderLevel: Number(form.reorderLevel),
-        price: Number(form.price),
+        quantity: Number(form.quantity || 0),
+        reorderLevel: Number(form.reorderLevel || 0),
+        price: Number(form.price || 0),
       };
 
       if (editingMedicineId) {
@@ -85,6 +85,8 @@ export default function Inventory() {
   }
 
   async function handleDeleteMedicine(id: string) {
+    console.log("Medicine id to be deleted", id);
+
     setDeletingId(id);
     try {
       await deleteMedicine(id);
@@ -146,7 +148,7 @@ export default function Inventory() {
                       <td>{medicine.category}</td>
                       <td className={medicine.quantity <= medicine.reorderLevel ? "low-stock" : ""}>{medicine.quantity}</td>
                       <td>{medicine.reorderLevel}</td>
-                      <td>${medicine.price.toFixed(2)}</td>
+                      <td>₹{medicine.price.toFixed(2)}</td>
                       <td>{new Date(medicine.expiryDate).toLocaleDateString()}</td>
                       <td>
                         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -185,9 +187,9 @@ export default function Inventory() {
               <div className="form-grid">
                 <div className="field full"><label htmlFor="medicine-name">Medicine name</label><input id="medicine-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
                 <div className="field full"><label htmlFor="category">Category</label><input id="category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
-                <div className="field"><label htmlFor="quantity">Quantity</label><input id="quantity" type="number" min={0} value={form.quantity} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} /></div>
-                <div className="field"><label htmlFor="reorder-level">Reorder level</label><input id="reorder-level" type="number" min={0} value={form.reorderLevel} onChange={(e) => setForm({ ...form, reorderLevel: Number(e.target.value) })} /></div>
-                <div className="field"><label htmlFor="price">Price</label><input id="price" type="number" min={0} step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} /></div>
+                <div className="field"><label htmlFor="quantity">Quantity</label><input id="quantity" type="number" min={0} value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} /></div>
+                <div className="field"><label htmlFor="reorder-level">Reorder level</label><input id="reorder-level" type="number" min={0} value={form.reorderLevel} onChange={(e) => setForm({ ...form, reorderLevel: e.target.value })} /></div>
+                <div className="field"><label htmlFor="price">Price</label><input id="price" type="number" min={0} step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
                 <div className="field"><label htmlFor="expiry-date">Expiry date</label><input id="expiry-date" type="date" value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.target.value })} /></div>
               </div>
 

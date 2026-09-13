@@ -67,6 +67,9 @@ export default function LoginForm() {
       <button type="submit" className="btn primary" disabled={loading} style={{ width: "100%" }}>
         {loading ? "Signing in..." : "Sign in"}
       </button>
+      <div style={{ marginTop: 12, fontSize: "0.9rem" }}>
+        Don't have an account? <a href="/register">Register</a>
+      </div>
 
       <div className="demo-box">
         Demo login: <strong>admin@pharmacy.com</strong> / <strong>Admin@123</strong>
