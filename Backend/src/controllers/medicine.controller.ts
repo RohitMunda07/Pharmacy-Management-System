@@ -43,6 +43,11 @@ export const getExpiringSoon = asyncHandler(async (req: Request, res: Response) 
   sendSuccess(res, medicines);
 });
 
+export const getExpired = asyncHandler(async (_req: Request, res: Response) => {
+  const medicines = await medicineService.getExpiredMedicines();
+  sendSuccess(res, medicines);
+});
+
 // Optional: manually trigger the low-stock email alert (only sends if
 // RESEND_API_KEY etc. are configured in .env — otherwise it's a no-op).
 export const sendLowStockAlertEmail = asyncHandler(async (_req: Request, res: Response) => {

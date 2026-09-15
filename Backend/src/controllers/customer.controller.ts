@@ -18,6 +18,11 @@ export const addCustomer = asyncHandler(async (req: Request, res: Response) => {
   sendSuccess(res, customer, "Customer added successfully", 201);
 });
 
+export const editCustomer = asyncHandler(async (req: Request, res: Response) => {
+  const customer = await customerService.updateCustomer(req.params.id as string, req.body);
+  sendSuccess(res, customer, "Customer updated successfully");
+});
+
 export const removeCustomer = asyncHandler(async (req: Request, res: Response) => {
   await customerService.deleteCustomer((req.params.id as string));
   sendSuccess(res, null, "Customer deleted successfully");

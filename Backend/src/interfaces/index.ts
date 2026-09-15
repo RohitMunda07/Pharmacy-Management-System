@@ -19,6 +19,14 @@ export interface CreateCustomerInput {
   address?: string;
 }
 
+export interface CreateSupplierInput {
+  name: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  notes?: string;
+}
+
 export interface CreateSaleInput {
   medicineId: string;
   customerId: string;

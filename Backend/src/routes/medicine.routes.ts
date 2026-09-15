@@ -7,6 +7,7 @@ import {
   removeMedicine,
   getLowStock,
   getExpiringSoon,
+  getExpired,
   sendLowStockAlertEmail,
   uploadMedicineImage,
 } from "../controllers/medicine.controller";
@@ -22,6 +23,7 @@ router.use(authenticate);
 router.get("/", getMedicines);
 router.get("/low-stock", getLowStock);
 router.get("/expiring-soon", getExpiringSoon);
+router.get("/expired", getExpired);
 router.post("/low-stock/notify", authorize("ADMIN"), sendLowStockAlertEmail);
 router.get("/:id", getMedicine);
 

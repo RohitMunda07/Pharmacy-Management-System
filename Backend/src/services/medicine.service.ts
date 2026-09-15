@@ -43,3 +43,8 @@ export async function getExpiringMedicines(withinDays = 30) {
   threshold.setDate(threshold.getDate() + withinDays);
   return Medicine.find({ expiryDate: { $lte: threshold } }).sort({ expiryDate: 1 });
 }
+
+export async function getExpiredMedicines() {
+  const now = new Date();
+  return Medicine.find({ expiryDate: { $lte: now } }).sort({ expiryDate: 1 });
+}

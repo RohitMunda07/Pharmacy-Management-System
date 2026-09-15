@@ -49,6 +49,31 @@ body {
   margin-left: 280px;
 }
 
+.brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.nav-toggle {
+  display: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
 .page-header {
   display: flex;
   align-items: center;
@@ -795,115 +820,156 @@ button:disabled {
 }
 
 @media (max-width: 960px) {
-  .content-grid,
-  .split-grid {
-    grid-template-columns: 1fr;
+  .app-shell {
+    flex-direction: column;
   }
-}
 
-@media (max-width: 768px) {
   .page-container {
+    width: 100%;
     margin-left: 0;
-    padding: 1.5rem 1rem 2rem;
+    padding: 1rem;
   }
 
   .navbar {
+    position: static;
     width: 100%;
     height: auto;
-    flex-direction: row;
     border-right: none;
     border-bottom: 1px solid rgba(148, 163, 184, 0.18);
   }
 
   .navbar-inner {
-    flex-direction: row;
+    display: block;
     padding: 0.75rem 1rem;
-    gap: 1rem;
   }
 
-  .brand {
-    margin-bottom: 0;
+  .brand-row {
+    display: flex;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .nav-links {
-    flex-direction: row;
-    margin: 0;
-    flex: 1;
+    display: none;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0.75rem 0 0;
+  }
+
+  .nav-links.open {
+    display: flex;
   }
 
   .nav-user {
-    margin-top: 0;
+    display: none;
+    margin-top: 0.75rem;
     flex-direction: row;
-    gap: 0.5rem;
-    border-top: none;
-    padding: 0;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 0.75rem;
   }
 
-  .user-chip {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.85rem;
+  .nav-user.open {
+    display: flex;
   }
 
-  .logout-btn {
-    width: auto;
-    margin-top: 0;
+  .data-table {
+    min-width: 0;
   }
 }
 
 @media (max-width: 640px) {
-  .page-header {
+  .data-table,
+  .data-table thead,
+  .data-table tbody,
+  .data-table tr,
+  .data-table th,
+  .data-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .data-table thead {
+    display: none;
+  }
+
+  .data-table tbody {
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    gap: 0.75rem;
   }
 
-  .form-grid {
-    grid-template-columns: 1fr;
+  .data-table tr {
+    padding: 0.85rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    background: rgba(255,255,255,0.8);
+  }
+
+  .data-table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.45rem 0;
+    border-bottom: none;
+  }
+
+  .data-table td::before {
+    content: attr(data-label);
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .toolbar > div {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar .search-box,
+  .toolbar .search-box input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .toolbar .btn,
+  .toolbar button {
+    width: 100%;
   }
 }
 
-/* Unified "customer-style" inputs used across pages */
-/* Targets existing inputs/selects/textareas used in forms so markup need not change */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="search"],
-input:not([type="checkbox"]):not([type="radio"]),
-select,
-textarea,
-.search-box input,
-.form-panel input,
-.form-panel select,
-.form-panel textarea,
-.login-card input,
-.login-card select {
-  background: rgba(255,255,255,0.92);
-  border: 1px solid rgba(148,163,184,0.18);
-  border-radius: 14px;
-  padding: 0.82rem 0.95rem;
-  font: inherit;
-  color: #0f172a;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 6px 18px rgba(2,6,23,0.03);
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.12s ease;
+@media (max-width: 480px) {
+  .navbar-inner {
+    gap: 0.5rem;
+  }
+
+  .nav-links {
+    width: 100%;
+  }
+
+  .nav-link {
+    flex: 1 1 42%;
+    text-align: center;
+  }
+
+  .login-card {
+    padding: 1.2rem 0.9rem;
+    border-radius: 14px;
+  }
+
+  .login-card h2 {
+    font-size: 1.5rem;
+  }
+
+  .hero-illustration {
+    padding: 1rem 0.75rem;
+  }
 }
 
-.search-box input::placeholder,
-input::placeholder,
-textarea::placeholder {
-  color: #94a3b8;
-}
-
-.search-box input:focus,
-.form-panel input:focus,
-.form-panel select:focus,
-.form-panel textarea:focus,
-.login-card input:focus,
-.login-card select:focus,
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  border-color: rgba(23, 107, 87, 0.95);
-  box-shadow: 0 8px 28px rgba(15,23,42,0.06), 0 0 0 6px rgba(20,184,166,0.06);
-}
 

@@ -5,3 +5,5 @@ export const createCustomerSchema = z.object({
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
   address: z.string().optional(),
 });
+
+export const updateCustomerSchema = createCustomerSchema.partial();

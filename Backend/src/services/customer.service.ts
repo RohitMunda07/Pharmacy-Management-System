@@ -18,6 +18,18 @@ export async function createCustomer(input: CreateCustomerInput) {
   return Customer.create(input);
 }
 
+export async function updateCustomer(id: string, input: Partial<CreateCustomerInput>) {
+  const existingCustomer = await getCustomerById(id);
+
+  if (input.phone && input.phone !== existingCustomer.phone) {
+    const duplicate = await Customer.findOne({ phone: input.phone, _id: { $ne: id } });
+    if (duplicate) throw ApiError.conflict("A customer with this phone number already exists");
+  }
+
+  const updated = await Customer.findByIdAndUpdate(id, input, { new: true });
+  return updated;
+}
+
 export async function deleteCustomer(id: string) {
   const customer = await getCustomerById(id);
   const sales = await Sale.findOne({ customer: customer._id });

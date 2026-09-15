@@ -15,5 +15,27 @@ const medicineSchema = new Schema(
 
 medicineSchema.index({ name: 1 });
 
+// Virtuals for helpful computed fields
+medicineSchema.virtual("isExpired").get(function (this: any) {
+  if (!this.expiryDate) return false;
+  return new Date(this.expiryDate) < new Date();
+});
+
+medicineSchema.virtual("daysToExpiry").get(function (this: any) {
+  if (!this.expiryDate) return null;
+  const diff = new Date(this.expiryDate).getTime() - new Date().getTime();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+});
+
+medicineSchema.virtual("stockStatus").get(function (this: any) {
+  if (this.quantity <= 0) return "out_of_stock";
+  if (this.reorderLevel != null && this.quantity <= this.reorderLevel) return "low_stock";
+  return "in_stock";
+});
+
+// Ensure virtuals are included when converting to JSON
+medicineSchema.set("toJSON", { virtuals: true });
+medicineSchema.set("toObject", { virtuals: true });
+
 export type MedicineDoc = InferSchemaType<typeof medicineSchema>;
 export const Medicine = model("Medicine", medicineSchema);
