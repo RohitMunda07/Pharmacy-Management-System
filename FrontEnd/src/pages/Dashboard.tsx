@@ -13,7 +13,7 @@ export default function Dashboard() {
     queryKey: ["sales"],
     queryFn: fetchSales,
   });
-
+``
   const lowStockItems = medicines.filter((medicine) => medicine.quantity <= medicine.reorderLevel);
   const inventoryValue = medicines.reduce((sum, medicine) => sum + medicine.price * medicine.quantity, 0);
   const totalTodaySales = sales.reduce((sum, sale) => sum + sale.total, 0);
